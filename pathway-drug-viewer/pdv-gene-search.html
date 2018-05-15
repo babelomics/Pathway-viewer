@@ -1,6 +1,6 @@
 <link rel="import" href="../../polymer/polymer.html">
 <link rel="import" href="../../iron-flex-layout/iron-flex-layout-classes.html">
-<link rel="import" href="../../stevia-elements/src/stv-search.html">
+<link rel="import" href="../../cba-elements/src/elm-search.html">
 
 <dom-module id="pdv-gene-search">
     <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
@@ -36,7 +36,7 @@
             border-bottom: 0;
         }
 
-        stv-search {
+        elm-search {
             width: 100%;
         }
 
@@ -48,8 +48,8 @@
         }
     </style>
     <template>
-        <label class="stv"><i class="fa fa-flash" style="color:#cf1c1c"></i> Add genes:</label>
-        <stv-search id="geneSearch" placeholder="Gene search" on-item-select="handleGeneSearchSelect" empty-message="No genes found in the available signaling pathways."></stv-search>
+        <label class="elm"><i class="fa fa-flash" style="color:#cf1c1c"></i> Add genes:</label>
+        <elm-search id="geneSearch" placeholder="Gene search" on-item-select="handleGeneSearchSelect" empty-message="No genes found in the available signaling pathways."></elm-search>
         <div id="selectedGeneList" class="list with-search flex-2">
             <template is="dom-repeat" items="{{selectedGeneList}}">
                 <pdv-gene-option name="{{item.name}}" value="{{item.value}}" manual="{{item.manual}}" drugactions="{{item.drugactions}}" on-remove="handleRemoveGene" on-change="handleChangeGene"></pdv-gene-option>
@@ -62,15 +62,15 @@
             </template>
         </div>
 
-        <label class="stv" style="margin-top:10px;"><i class="fa fa-flask" style="color:#7acb1b"></i> Add drugs:</label>
-        <stv-search id="drugSearch" placeholder="Drug search" display-key="n" min-query-length="3" on-item-select="handleDrugSearchSelect" empty-message="No drugs found."></stv-search>
+        <label class="elm" style="margin-top:10px;"><i class="fa fa-flask" style="color:#7acb1b"></i> Add drugs:</label>
+        <elm-search id="drugSearch" placeholder="Drug search" display-key="n" min-query-length="3" on-item-select="handleDrugSearchSelect" empty-message="No drugs found."></elm-search>
         <div id="selectedDrugList" class="list with-search flex" style="height:100px;">
             <template is="dom-repeat" items="{{selectedDrugList}}">
                 <pdv-drug-item drug="{{item}}" on-remove-drug-item="handleRemoveDrug"></pdv-drug-item>
             </template>
         </div>
 
-        <label class="stv" style="margin-top:10px;"><i class="fa fa-flash" style="color:#7acb1b"></i> Genes affected by drugs:</label>
+        <label class="elm" style="margin-top:10px;"><i class="fa fa-flash" style="color:#7acb1b"></i> Genes affected by drugs:</label>
         <div id="relatedGeneList" class="list flex-3">
             <template is="dom-repeat" items="{{relatedGeneList}}">
                 <pdv-gene-option name="{{item.name}}" manual="{{item.manual}}" drugactions="{{item.drugactions}}"></pdv-gene-option>

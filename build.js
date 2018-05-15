@@ -50,15 +50,15 @@ async.waterfall([
         shell.cp('-r', path.join(__dirname, 'conf/'), bp);
         shell.cp('-r', path.join(bowerPath, 'network-viewer', 'conf', 'config.js'), path.join(bp, 'conf', 'nv-config.js'));
         shell.cp('-r', path.join(bowerPath, 'normalize-css'), bp);
-        shell.cp('-r', path.join(bowerPath, 'stevia-elements', 'fonts'), bp);
-        shell.cp('-r', path.join(bowerPath, 'stevia-elements', 'css'), bp);
+        shell.cp('-r', path.join(bowerPath, 'cba-elements', 'fonts'), bp);
+        shell.cp('-r', path.join(bowerPath, 'cba-elements', 'css'), bp);
         shell.cp('-r', path.join(bowerPath, 'fontawesome', 'css'), path.join(bp, "fontawesome/"));
         shell.cp('-r', path.join(bowerPath, 'fontawesome', 'fonts'), path.join(bp, "fontawesome/"));
         shell.cp('-r', path.join(bowerPath, 'webcomponentsjs', '*.min.js'), path.join(bp, "webcomponentsjs/"));
 
         // fix index.html paths
         shell.sed('-i', '../network-viewer/conf/config.js', 'conf/nv-config.js', buildIndexHTML);
-        shell.sed('-i', '../stevia-elements/', '', buildIndexHTML);
+        shell.sed('-i', '../cba-elements/', '', buildIndexHTML);
         shell.sed('-i', '../normalize-css/', 'normalize-css/', buildIndexHTML);
         shell.sed('-i', '../fontawesome/', 'fontawesome/', buildIndexHTML);
         shell.sed('-i', '../webcomponentsjs/', 'webcomponentsjs/', buildIndexHTML);

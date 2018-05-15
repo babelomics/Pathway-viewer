@@ -3,7 +3,7 @@
 <script src="../network-viewer/conf/config.js"></script>
 <link rel="import" href="../pathway-viewer/pathway-viewer.html">
 
-<link rel="import" href="../stevia-elements/src/stv-dialog/stv-dialog.html">
+<link rel="import" href="../cba-elements/src/elm-dialog/elm-dialog.html">
 
 <link rel="import" href="pathway-drug-viewer/pdv-gene-search.html">
 <link rel="import" href="pathway-drug-viewer/pdv-gene-option.html">
@@ -40,7 +40,7 @@
             height: 100%;
         }
 
-        #left>.stv-btn {
+        #left>.elm-btn {
             margin: 4px 0;
         }
 
@@ -138,13 +138,13 @@
         <form id="form" class="horizontal layout">
             <div id="left" class="vertical layout">
                 <div class="horizontal layout">
-                    <div hidden$="{{hideBackButton}}" id="backButton" class="stv-btn stv-btn-shdw button" on-click="handleBackButton">
+                    <div hidden$="{{hideBackButton}}" id="backButton" class="elm-btn elm-btn-shdw button" on-click="handleBackButton">
                         <i class="fa fa-chevron-left"></i>&nbsp; Open &nbsp;
                     </div>
-                    <div id="updateGenesButton" class="flex stv-btn stv-btn-shdw button" on-click="handleUpdateButton">
+                    <div id="updateGenesButton" class="flex elm-btn elm-btn-shdw button" on-click="handleUpdateButton">
                         <i class="fa fa-refresh"></i>&nbsp; Update
                     </div>
-                    <div id="clearButton" class="stv-btn stv-btn-shdw button" on-click="handleClearButton">
+                    <div id="clearButton" class="elm-btn elm-btn-shdw button" on-click="handleClearButton">
                         <i class="fa fa-times"></i>&nbsp; Clear &nbsp;
                     </div>
                 </div>
@@ -175,19 +175,19 @@
 
 
             <div id="koControl">
-                <label class="stv" style="margin-bottom:10px;">Genes activity value:</label>
+                <label class="elm" style="margin-bottom:10px;">Genes activity value:</label>
                 <template is="dom-repeat" items="{{koInputValues}}">
                     <div class="horizontal layout" style="margin-bottom:2px;">
-                        <div class="stv-txt" style="width:70px;text-align:right;">{{item.name}}:</div>
-                        <input class="stv" type="number" min="0" max="1" step="0.01" on-input="handlekoControlChange" value="{{item.value::input}}" style="width:70px;" />
+                        <div class="elm-txt" style="width:70px;text-align:right;">{{item.name}}:</div>
+                        <input class="elm" type="number" min="0" max="1" step="0.01" on-input="handlekoControlChange" value="{{item.value::input}}" style="width:70px;" />
                     </div>
                 </template>
-                <!-- <label class="stv">Activity value:</label> -->
-                <!-- <input class="stv" type="number" min="0" max="1" step="0.05" on-change="handlekoControlChange" value="{{koInputValue::input}}" /> -->
+                <!-- <label class="elm">Activity value:</label> -->
+                <!-- <input class="elm" type="number" min="0" max="1" step="0.05" on-change="handlekoControlChange" value="{{koInputValue::input}}" /> -->
             </div>
         </form>
 
-        <div id="loading" hidden$="{{!loading}}" class="horizontal layout center-justified stv-unselectable">
+        <div id="loading" hidden$="{{!loading}}" class="horizontal layout center-justified elm-unselectable">
             <div class="self-center">
                 <i class="fa fa-circle-o-notch fa-spin"></i> Loading...
             </div>
@@ -465,7 +465,7 @@
                     var me = this;
                     me.clean();
                     this.loading = true;
-                    SteviaManager.getPlainFolderFiles(neo._id, function(folderFiles) {
+                    CbaManager.getPlainFolderFiles(neo._id, function(folderFiles) {
                         me._createFilePathMap(folderFiles);
                         me.$.pathwayViewer.set('sessionFileNameMap', me.fileNameMap);
                         me.$.pathwayViewer.reload();
@@ -518,7 +518,7 @@
                     this._hideKoControl();
                     // this.loading = true;
                     var init_natt = this.getFileFromName(this.initPath + '/' + category.id + '.natt');
-                    SteviaManager.getFileContent(init_natt._id, function(nattInitContent) {
+                    CbaManager.getFileContent(init_natt._id, function(nattInitContent) {
                         //init expression attributes
                         new AttributeNetworkDataAdapter({
                             async: false,
@@ -624,7 +624,7 @@
                 if (this.loading == false) {
                     this.loading = true;
 
-                    SteviaManager.updateFileAttributes(this.reportFile._id, {
+                    CbaManager.updateFileAttributes(this.reportFile._id, {
                         pathwayDrugViewer: {}
                     }, function() {});
 
@@ -645,7 +645,7 @@
                     };
 
                     this.loading = true;
-                    SteviaManager.jobs.run({
+                    CbaManager.jobs.run({
                         query: query,
                         request: {
                             method: 'POST',
@@ -725,7 +725,7 @@
                         // console.log(ko_file_content);
                         this._updateGenes(ko_file_content);
                     } else {
-                        new StvDialog().alert("Please, add at least one gene.");
+                        new elmDialog().alert("Please, add at least one gene.");
                     }
                 }
             },
@@ -775,7 +775,7 @@
                     };
 
                     this.loading = true;
-                    SteviaManager.jobs.run({
+                    CbaManager.jobs.run({
                         query: query,
                         request: {
                             method: 'POST',
@@ -835,7 +835,7 @@
                     }
                     attr.relatedDrugList = relatedDrugListToSave;
 
-                    SteviaManager.updateFileAttributes(this.reportFile._id, {
+                    CbaManager.updateFileAttributes(this.reportFile._id, {
                         pathwayDrugViewer: attr
                     }, function() {});
                 }
@@ -963,7 +963,7 @@
             },
             _loadInputGenes: function() {
                 var me = this;
-                SteviaManager.getFileContent(this.getFileFromName('ko.txt')._id, function(content) {
+                CbaManager.getFileContent(this.getFileFromName('ko.txt')._id, function(content) {
                     var parsedContent = me._parseTabularFile(content);
                     me.set('_inputGeneList', parsedContent);
                 });
