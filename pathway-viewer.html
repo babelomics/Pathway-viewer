@@ -379,6 +379,15 @@
                 this.selectCategory(categories[0]);
             }
         },
+        _categoryDetailsFromID: function (categoryId) {
+            var categories = this.categories;
+            for(var i = 0; i < categories.length; i++){
+                if(categories[i].id==categoryId) {
+                    var x = categories[i];
+                    return x;
+                    }
+                }                
+        },
         loadFile: function(filePath, cb) {
             if (this.pathType == 'url') {
                 this._openRemoteFile(filePath, function(content) {
@@ -445,6 +454,21 @@
             var circuit = e.model.item;
             console.log(circuit);
             this.selectCircuit(circuit);
+        },
+        _circuitDetailsFromName: function (circuitName) {
+            var categories = this.categories;
+            for(var i = 0; i < categories.length; i++){ 
+                var circuits = this.categories[i].paths;
+                for(var j = 0; j < circuits.length; j++){
+                    if(circuits[j].name==circuitName) {
+                        //var x = circuits[j];
+                        var circuit = circuits[j];  
+                        var category = categories[i];
+                        var selectedCirInCat = [{circuit:circuit}, {category:category}];  
+                        return selectedCirInCat;
+                        }
+                    }
+            }                
         },
         selectCategory: function(category) {
             var me = this;
