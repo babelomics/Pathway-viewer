@@ -146,19 +146,19 @@
         }
     </style>
     <template>
-        <div hidden$="{{!showHipathiaLegend}}" style="text-align:right;">
-            <img src$="{{_hipathiaLegendImage}}"></img>
-        </div>
-        <div id="main">
+        <div id="main" style="margin-top: 20px;"  on-vertexsearch="handleVertexSearch">
+            <br>
             <div id="left">
                 <div id="left-label">
                     <div class="label" style="font-size:20px;">{{leftTitle}}</div>
                     <div class="flex"></div>
                     <content select=".left-label"></content>
+                    <input on-keypress="handleVertexSearch" id="vertexSearchField" class="elm" type="text" placeholder="Search" style="width: 100px; margin-right:3px;">
+
                     <div class="elm-btn elm-btn-shdw" title="Export SVG image" on-click="handleExportImage">
                         <i class="fa fa-image"></i>
                     </div>
-                    <div class="elm-btn elm-btn-shdw" title="Center network" on-click="handleCenterNetwork" style="border-left:0">
+                    <div class="elm-btn elm-btn-shdw" title="Center network" on-click="handleCenterNetwork" style="border-left:0" >
                         <i class="fa fa-crosshairs"></i>
                     </div>
                     <div class="elm-btn elm-btn-shdw" title="Width adjust" on-click="handleAdjustWidthNetwork" style="border-left:0">
@@ -179,8 +179,8 @@
                 <div class="label horizontal layout">
                     <div>{{categoryLabel}}:</div>
                     <div class="flex"></div>
-                    <span hidden="{{hideAltered}}" style="color:#000">{{countChanged(categories)}}</span>
-                    <span hidden="{{hideAltered}}" style="color:#666">&nbsp;altered</span>
+                    <span hidden="{{!hideAltered}}" style="color:#000">{{countChanged(categories)}}</span>
+                    <span hidden="{{!hideAltered}}" style="color:#666">&nbsp;altered</span>
                 </div>
                 <div class="horizontal layout">
                     <input class="elm" type="text" placeholder="Filter..." value="{{categorySearchString::input}}">
@@ -201,8 +201,8 @@
                 <div class="label horizontal layout">
                     <label class="elm">{{circuitLabel}}:</label>
                     <div class="flex"></div>
-                    <span hidden="{{hideAltered}}" style="color:#000">{{countChanged(circuits)}}</span>
-                    <span hidden="{{hideAltered}}" style="color:#666">&nbsp;altered</span>
+                    <span hidden="{{!hideAltered}}" style="color:#000">{{countChanged(circuits)}}</span>
+                    <span hidden="{{!hideAltered}}" style="color:#666">&nbsp;altered</span>
                 </div>
                 <div id="circuits" class="box listbox">
                     <template is="dom-repeat" items="{{circuits}}">
@@ -218,6 +218,9 @@
                 <content select=".right-box"></content>
             </div>
 
+        </div>
+        <div hidden$="{{!showHipathiaLegend}}" style="text-align:left;">
+            <img src="images/report_legend.png">
         </div>
     </template>
 </dom-module>
@@ -314,6 +317,30 @@
             this.set('leftTitle', 'Pathway viewer');
             this.set('sessionFileNameMap', {});
             this.$.networkViewer.startOver();
+        },
+        handleVertexSearch: function(e) {
+            //e.which == 13
+            if(true)
+            {
+                var nv =document.getElementsByTagName("network-viewer")[0];
+                str = 'all attributes';
+                    var selected = [];
+                    for (var i = 0; i < nv.graph.vertices.length; i++) {
+                        var vertex = nv.graph.vertices[i];
+                        for (var att in vertex.attributes) {                            
+                            if (vertex.attributes[att].toString().indexOf(e.currentTarget.value) != -1) {
+                                selected.push(vertex);
+                                break;
+                            }
+                        }
+                    }
+                    nv.set('selectedVertices', selected);
+                if (nv.selectedVertices.length == 0) {
+                    elm.utils.msg('Search results', 'Your search using ' + str + ' "' + e.explicitOriginalTarget.value + '" using did not match any node.');
+                } else {
+                    elm.utils.msg('Search results', nv.selectedVertices.length + ' nodes found using ' + str + '. The found nodes has been selected.');
+                }
+            }
         },
         handleExportImage: function() {
             var text = this.$.networkViewer.exportSVG();
@@ -512,6 +539,13 @@
                         me.$.networkViewer.$.nodeRender.applyDirect(dp, dp);
                     }
                 }
+//Start : added in the new version
+		var vertices = me.$.networkViewer.vertices;
+            	for (var i = 0, l = vertices.length; i < l; i++) {
+		        var vertex = vertices[i];
+		        vertex.renderer.set('labelColor', vertex.attributes.labelColor);
+            	}
+//End : added in the new version
 
                 //Edge attribute processing
                 var ecolmap = {};
@@ -552,7 +586,7 @@
                 this.selectCategory(c);
             }
         },
-        selectCircuit: function(circuit) {
+        selectCircuit: function(circuit) {            
             var me = this;
             if (this.selectedCircuit != null && circuit.id === this.selectedCircuit.id) {
                 this.set('selectedCircuit', null);
@@ -560,8 +594,11 @@
                 this.$.networkViewer.$.edgeRender.removeVisualSet('opacity');
             } else {
                 this.set('selectedCircuit', circuit);
+                var attrId =circuit.id;
+                console.log("circuit");
+                console.log(circuit);
                 // Backward compatibility
-                var attrId = circuit.id.split('__').pop();
+                //var attrId = circuit.id.split('__').pop();
                 // ------------------------------------------
                 this.$.networkViewer.$.nodeRender.applyVisualSet({
                     attribute: attrId,
@@ -634,7 +671,6 @@
             if (Array.isArray(list)) {
                 for (var i = 0; i < list.length; i++) {
                     var item = list[i];
-                    // console.log(pw.haschanged);
                     if (item.haschanged === true) {
                         count++;
                     }
