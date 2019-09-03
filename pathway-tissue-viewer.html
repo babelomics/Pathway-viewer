@@ -1,0 +1,521 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-flex-layout/iron-flex-layout-classes.html">
+<script src="../network-viewer/conf/config.js"></script>
+<link rel="import" href="../pathway-viewer/pathway-viewer.html">
+
+<link rel="import" href="../cba-elements/src/elm-dialog/elm-dialog.html">
+
+<link rel="import" href="pathway-drug-viewer/pdv-gene-search.html">
+<link rel="import" href="pathway-drug-viewer/pdv-gene-option.html">
+<link rel="import" href="pathway-drug-viewer/pdv-drug-option.html">
+<link rel="import" href="pathway-drug-viewer/pdv-drug-item.html">
+<link rel="import" href="pathway-drug-viewer/pdv-action-option.html">
+
+<dom-module id="pathway-tissue-viewer">
+    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <style>
+         :host {
+            display: block;
+            position: relative;
+            box-sizing: border-box;
+            height: 100%;
+            background-color: var(--light-secondary-color);
+            @apply(--layout-horizontal);
+        }
+
+        #form {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px 10px 10px 10px;
+        }
+
+        #left {
+            position: relative;
+            width: 15%;
+            max-width: 280px;
+            min-width: 150px;
+            box-sizing: border-box;
+            height: 100%;
+        }
+
+        #left>.elm-btn {
+            margin: 4px 0;
+        }
+
+        pathway-viewer {
+            padding-left: 10px;
+        }
+
+        #inputTissueList {
+            @apply(--layout-flex);
+            overflow-y: auto;
+        }
+
+        #updateGenesButton.button {
+            background-color: var(--dark-button-color) !important;
+            color: var(--text-primary-color) !important;
+        }
+
+        #updateGenesButton.button:hover {
+            background-color: var(--light-button-color) !important;
+        }
+
+        #updateGenesButton,
+        #clearButton {
+            margin-left: 5px;
+        }
+
+        #backButton {
+            background-color: #188ead !important;
+            color: var(--text-primary-color) !important;
+        }
+
+        #backButton:hover {
+            background-color: #20aed4 !important;
+        }
+
+        #clearButton {
+            background-color: #bd1a1a !important;
+            color: var(--text-primary-color) !important;
+        }
+
+        #clearButton:hover {
+            background-color: #db1e1e !important;
+        }
+
+        #search {
+            width: 100%;
+            margin-bottom: 3px;
+        }
+
+        #loading {
+            z-index: 100000;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.60);
+            font-size: 18px;
+        }
+
+        #loading>div {
+            box-shadow: 2px 2px 3px 0px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            background-color: var(--dark-button-color);
+            color: #fff;
+            padding: 10px 40px;
+        }
+        /* List items */
+        .box,
+         :host::content .right-box {
+            border: 1px solid var(--divider-color);
+            box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+            background-color: var(--text-primary-color);
+        }
+
+        .listbox>div {
+            cursor: pointer;
+            padding: 1px 4px;
+            border: 1px solid transparent;
+            color: #555;
+        }
+
+        .listbox>div:hover {
+            background-color: var(--hover-color);
+            border-color: var(--accent-color);
+        }
+
+        .listbox>div[data-checked] {
+            background-color: var(--accent-color);
+        }
+
+        .listbox>div>span[data-haschanged] {
+            margin-right: 3px;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .listbox>div>span[data-down][data-haschanged]:before,
+        .listbox>div>span[data-up][data-haschanged]:before {
+            margin-right: 3px;
+            color: #aaa;
+        }
+
+        .listbox>div>span[data-up][data-haschanged]:before {
+            font-family: 'FontAwesome';
+            content: '\f176';
+        }
+
+        .listbox>div>span[data-down][data-haschanged]:before {
+            font-family: 'FontAwesome';
+            content: '\f175';
+        }
+
+        .listbox>div>span[data-upsig][data-haschanged]:before {
+            color: #cc0000;
+        }
+
+        .listbox>div>span[data-downsig][data-haschanged]:before {
+            color: #005aa3;
+        }
+
+        .label:not(:first-child),
+         :host::content.right-tissue-label:not(:first-child) {
+            padding-top: 10px;
+        }
+
+         :host::content.right-tissue-label,
+        .label {
+            @apply(--layout-horizontal);
+            @apply(--layout-center);
+            color: var(--secondary-text-color);
+            height: 25px;
+            padding-left: 5px;
+        }
+
+    </style>
+    <template>
+        <form id="form" class="horizontal layout">
+            <pathway-viewer id="pathwayViewer" path="{{path}}" path-type="session" background-color="#fcfcfc" >
+                <!-- <span>{{signalingPathwaysGeneNum}}</span> -->
+                <!-- <span style="margin-left:20px;">{{missingGeneNum}}</span>,
+                <span style="margin-left:10px;">{{translatedGeneNum}}</span>,
+                <span style="margin-left:10px;">{{untranslatedGeneNum}}</span> -->
+                <div class="label right-tissue-label">
+                    Tissue list:
+                </div>
+                <div id="inputTissueList" class="right-tissue-box box listbox" style="height:100px;">
+                    <template is="dom-repeat" items="{{_tissueList}}">
+                        <div on-click="handleTissueClick" data-checked$="{{isTissueSelected(item, selectedTissue)}}">
+                            <span>{{item.tissue}}</span>
+                            <!--<span>{{item.folderID}}</span>-->
+                        </div>
+                    </template>
+                </div>
+                <content select=".left-label"></content>
+            </pathway-viewer>
+        </form>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'pathway-tissue-viewer',
+            properties: {
+                jobFolder: {
+                    type: Object,
+                    observer: 'jobFolderChanged'
+                },
+                jobUpdateArgs: {
+                    type: Object
+                },
+                jobClearArgs: {
+                    type: Object
+                },
+                reportFile: {
+                    type: Object,
+                    value: null
+                },
+                lastSelectedNode: {
+                    type: Object,
+                },
+                loading: {
+                    type: Boolean,
+                    value: false
+                },
+
+                /*Pathways*/
+                pathwayList: {
+                    type: Array
+                },
+                selectedPathway: {
+                    type: Object
+                },
+                pathList: {
+                    type: Array
+                },
+                selectedPath: {
+                    type: Object
+                },
+                selectedTissue: {
+                    type: Object
+                },
+                pwChangedCount: {
+                    type: Number,
+                    value: 0
+                },
+                circuitChangedCount: {
+                    type: Number,
+                    value: 0
+                },
+                /*End pathways*/
+                _tissueList: {
+                    type: Array,
+                    value: function() {
+                        return []
+                    }
+                },
+                _pathwayInitExpression: {
+                    type: Object,
+                },
+                fileNameMap: {
+                    type: Object
+                },
+                signalingPathwaysGeneNum: {
+                    type: String
+                },
+                missingGeneNum: {
+                    type: String
+                },
+                translatedGeneNum: {
+                    type: String
+                },
+                untranslatedGeneNum: {
+                    type: String
+                },
+                path: {
+                    type: String
+                },
+                initPath: {
+                    type: String
+                },
+                categoryLabel: {
+                    type: String,
+                    value: 'Categories'
+                },
+                circuitLabel: {
+                    type: String,
+                    value: 'Circuits'
+                }
+            },
+            handleTissueClick: function(e) {
+                var tissue = e.model.item;
+                //this.selectCategory(category);
+                this.selectTissue(tissue.tissue);
+                //this.path="tissues/"+tissue+"/pathways";
+                this.path="tissues/"+tissue.tissue+"/pathways";
+                ///Blood/pathways
+                this.set('path',this.path);
+                this.set('selectedTissue',tissue);
+
+            },
+            isTissueSelected: function(item, selected) {
+                return selected != null && item.tissue === selected.tissue;
+            },
+            reset: function() {
+                this.clean();
+                this.set('jobFolder', null);
+            },
+            ready: function() {
+                var me = this;
+                // this.$.pathwayViewer.$.networkViewer.addEventListener('hoververtex', function(e) {
+                // var x = e.detail.e.clientX;
+                // var y = e.detail.e.clientY;
+                // console.log(x + '-' + y);
+                // });
+                // this.$.pathwayViewer.$.networkViewer.addEventListener('hoverleave', function(e) {
+                //     console.log(e)
+                // });
+                // this.$.pathwayViewer.$.networkViewer.addEventListener('leftclickvertex', function(e) {
+                //     console.log(e);
+                // });
+                this.$.pathwayViewer.$.networkViewer.addEventListener('selectback', function(e) {
+                    //me._hideKoControl();
+                });
+            },
+            clean: function() {
+                this.set('_tissueList', []);
+                this.set('reportFile', null);
+                this.$.pathwayViewer.clean();
+                this.set('selectedTissue', null);
+                this.loading = false;
+            },
+            jobFolderChanged: function(neo, old) {
+                var selectedTissue;
+                if (neo) {
+                    var me = this;
+                    me.clean();
+                    this.loading = true;
+                    CbaManager.getPlainFolderFiles(neo._id, function(folderFiles) {
+                        me._createFilePathMap(folderFiles);
+                        me.$.pathwayViewer.set('sessionFileNameMap', me.fileNameMap);
+                        me.$.pathwayViewer.set('hideAltered', true);
+                        me.$.pathwayViewer.reload();
+                        
+                        selectedTissue= me._loadTissueList();
+                        //me.set('reportFile', me.getTissueFromName('report.xml',this.selectedTissue.name));
+                        me.set('reportFile', me.getTissueFromName('report.xml',"Blood"));
+                        me.loading = false;
+                    });
+                }
+            },
+            _createFilePathMap: function(files) {
+                this.fileNameMap = {};
+                var jobRelativePath;
+                for (var i = 0; i < files.length; i++) {
+                    var f = files[i];
+                    if (this.jobFolder._id != f._id) {
+                        jobRelativePath = f.path.replace(this.jobFolder.path + '/', '');
+                        this.fileNameMap[jobRelativePath] = f;
+                    }
+                }
+            },
+            getFileFromName: function(name) {
+                var file = this.fileNameMap[name];
+                if (file != null) {
+                    return file;
+                } else {
+                    /* Old versions compatibility */
+                    for (var key in this.fileNameMap) {
+                        if (key == 'report/' + name) {
+                        //if (key == 'tissues/'+tissue+'/' + name) {
+                            return this.fileNameMap[key];
+                        }
+                    }
+                }
+            },
+
+            getTissueFromName: function(name,tissue) {
+                var file = this.fileNameMap[name];
+                if (file != null) {
+                    return file;
+                } else {
+                    for (var key in this.fileNameMap) {
+                        if (key == 'tissues/'+tissue+'/' + name) {
+                            return this.fileNameMap[key];
+                        }
+                    }
+                }
+            },
+            handleSelectCategory: function(e) {
+                e.stopPropagation();
+                var me = this;
+                var category = e.detail;
+                if (category != null) {
+                    this.loading = true;
+                    var init_natt = this.getFileFromName(this.initPath + '/' + category.id + '.natt');
+                    CbaManager.getFileContent(init_natt._id, function(nattInitContent) {
+                        //init expression attributes
+                        new AttributeNetworkDataAdapter({
+                            async: false,
+                            useFirstLineAsColumnNames: true,
+                            dataSource: new StringDataSource(nattInitContent),
+                            handlers: {
+                                'data:load': function(e) {
+                                    me._pathwayInitExpression = {};
+                                    for (var i = 0; i < e.attributes.length; i++) {
+                                        var att = e.attributes[i];
+                                        me._pathwayInitExpression[att.id] = att;
+                                    }
+                                    me.loading = false;
+                                }
+                            }
+                        });
+                    });
+                    // this.$.pathwayViewer.$.networkViewer.$.nodeRender.applyDirect('color', 'strokeColor');
+                    this.$.pathwayViewer.$.networkViewer.$.nodeRender.applyDirect('exp_col', 'color');
+                    this.$.pathwayViewer.$.networkViewer.$.nodeRender.applyDirect('shape', 'shape');
+                    this.$.pathwayViewer.$.networkViewer.$.nodeRender.applyDirect('width', 'size');
+                    this.$.pathwayViewer.$.networkViewer.$.nodeRender.applyDirect('labelSize', 'labelSize');
+
+                    this.$.pathwayViewer.$.networkViewer.$.edgeRender.applyDirect('color', 'color');
+                    this.$.pathwayViewer.$.networkViewer.$.edgeRender.applyDirect('head', 'shape');
+                    /*EXAMPLE*/
+                    // nodeRender.applyVisualSet({
+                    //     attribute: "drugs",
+                    //     displayProperty: "color",
+                    //     enabled: true,
+                    //     matches: matches,
+                    //     parse: "string",
+                    //     type: "categorical"
+                    // });
+
+                    // this.$.pathwayViewer.$.networkViewer.setVertexDefaultPositionX('X', true, false);
+                    // this.$.pathwayViewer.$.networkViewer.setVertexDefaultPositionY('Y', true, true);
+                    // this.$.pathwayViewer.$.networkViewer.setVertexDefaultLabelAttribute('genesList');
+                    this.$.pathwayViewer.$.networkViewer.setVertexDefaultLabelAttribute('label');
+
+                    this.fire('select-category', e.detail);
+                }
+            },
+            handleSelectCircuit: function(e) {
+                e.stopPropagation();
+                this.fire('select-circuit', e.detail);
+            },
+            _loadTissueList: function() {
+                var me = this;
+                var selectedTissue;
+                for (var key in this.fileNameMap) { 
+                    if (this.fileNameMap[key].type=="FOLDER" && me.fileNameMap[key].name=="tissues") 
+                        tissuesParentID=me.fileNameMap[key]._id;
+                }
+                var _tissueList=[];
+                for (var key in me.fileNameMap) { 
+                    if (me.fileNameMap[key].type=="FOLDER" && me.fileNameMap[key].parent==tissuesParentID) {
+                        _tissueList.push({
+                                tissue: me.fileNameMap[key].name,
+                                folderID: me.fileNameMap[key]._id
+                            });                        
+                    }
+                }
+                
+                for (var i = 0; i < _tissueList.length; i++) {
+                    var tis = _tissueList[i];
+                    if (this.selectedTissue != null && this.selectedTissue.folderID == tis.folderID) {
+                        selectedTissue = tis;
+                    }
+                }
+                //_tissueList.sort(this.checkTissueSort('alpha', 'asc')); has to be sorted depending of chnages!!!
+                me.set('_tissueList', _tissueList);
+                if (selectedTissue != null) {
+                    this.selectTissue(selectedTissue);
+                    this.set('selectedTissue',selectedTissue);
+                } else {
+                    this.selectTissue(_tissueList[0]);
+                    this.set('selectedTissue',_tissueList[0]);
+                }
+
+                return selectedTissue;
+            },
+            loadInfoFromTissue: function(tissue) {
+            var me = this;
+
+            //VaFI_example-30 / tissues / Blood / pathways /
+            //this.path="tissues/"+tissue+"/pathways";
+            this.path="tissues/"+tissue+"/pathways";
+            ///Blood/pathways
+            this.set('path',this.path);
+
+            var pathInfo = me.$.pathwayViewer.sessionFileNameMap[this.path+'path_info.json'];
+            /*if (pathInfo == null) {
+                pathInfo = this.sessionFileNameMap['path_info.json'];
+            }*/
+            if (pathInfo != null) {
+                CbaManager.getFileContent(pathInfo._id, function(content) {
+                    me._loadCategories(content);
+                });
+            }
+        },
+            selectTissue: function (selectedTissue) {
+                var me = this;
+                // body...
+                me.set('reportFile', me.getTissueFromName('report.xml',selectedTissue.name));
+                this.loadInfoFromTissue(selectedTissue.tissue);
+                this.set('selectedTissue', this.selectedTissue);
+                /*this.loading = true;
+                    CbaManager.getPlainFolderFiles(selectedTissue._id, function(folderFiles) {
+                        me._createFilePathMap(selectedTissue._id);
+                        me.$.pathwayViewer.set('sessionFileNameMap', me.fileNameMap);
+                        me.$.pathwayViewer.reload();
+                        
+                        //me._loadTissueList();
+                        me.set('reportFile', me.getTissueFromName('report.xml',selectedTissue.name));
+                        me.loading = false;
+                    });*/
+                    this.fire('select-tissue', selectedTissue);
+            }
+        });
+    </script>
+</dom-module>

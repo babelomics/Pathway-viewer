@@ -461,8 +461,8 @@
                 this._hideKoControl();
             },
             jobFolderChanged: function(neo, old) {
+                var me = this;
                 if (neo) {
-                    var me = this;
                     me.clean();
                     this.loading = true;
                     CbaManager.getPlainFolderFiles(neo._id, function(folderFiles) {
