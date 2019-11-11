@@ -31,7 +31,7 @@
         }
 
          :host[show-hipathia-legend]>#main {
-            height: calc(100% - 200px) !important;
+            height: calc(100% - 100px) !important;
         }
 
         #categories,
@@ -146,15 +146,13 @@
         }
     </style>
     <template>
-        <div hidden$="{{!showHipathiaLegend}}" style="text-align:right;">
-            <img src$="{{_hipathiaLegendImage}}"></img>
-        </div>
         <div id="main">
             <div id="left">
                 <div id="left-label">
-                    <div class="label" style="font-size:20px;">{{leftTitle}}</div>
+                    <div class="label" style="font-size:20px;">{{leftTitle}} <span style="color: black"> > </span>  <a target="_blank" href="{{leftTitleUrl}}"> <i class="fa fa-database" aria-hidden="true"></i></a></div>
                     <div class="flex"></div>
                     <content select=".left-label"></content>
+                    <input on-keypress="handleVertexSearch" id="vertexSearchField" class="elm" type="text" placeholder="Search" style="width: 100px; margin-right:3px;">
                     <div class="elm-btn elm-btn-shdw" title="Export SVG image" on-click="handleExportImage">
                         <i class="fa fa-image"></i>
                     </div>
@@ -221,6 +219,9 @@
             </div>
 
         </div>
+        <div hidden$="{{!showHipathiaLegend}}" style="text-align:left;">
+            <img src$="{{_hipathiaLegendImage}}"></img>
+        </div>
     </template>
 </dom-module>
 <script>
@@ -259,7 +260,8 @@
             },
             backgroundColor: {
                 type: String,
-                value: '#F1F5F5'
+                value: '#FFF'
+                //value: '#F1F5F5'
             },
             hideAltered: {
                 type: Boolean,
@@ -316,6 +318,30 @@
             this.set('leftTitle', 'Pathway viewer');
             this.set('sessionFileNameMap', {});
             this.$.networkViewer.startOver();
+        },
+        handleVertexSearch: function(e) {
+            //e.which == 13
+            if(true)
+            {
+                var nv =document.getElementsByTagName("network-viewer")[0];
+                str = 'all attributes';
+                    var selected = [];
+                    for (var i = 0; i < nv.graph.vertices.length; i++) {
+                        var vertex = nv.graph.vertices[i];
+                        for (var att in vertex.attributes) {                            
+                            if (vertex.attributes[att].toString().indexOf(e.currentTarget.value) != -1) {
+                                selected.push(vertex);
+                                break;
+                            }
+                        }
+                    }
+                    nv.set('selectedVertices', selected);
+                if (nv.selectedVertices.length == 0) {
+                    elm.utils.msg('Search results', 'Your search using ' + str + ' "' + e.explicitOriginalTarget.value + '" using did not match any node.');
+                } else {
+                    elm.utils.msg('Search results', nv.selectedVertices.length + ' nodes found using ' + str + '. The found nodes has been selected.');
+                }
+            }
         },
         handleExportImage: function() {
             var text = this.$.networkViewer.exportSVG();
@@ -461,6 +487,7 @@
                 category.paths.sort(me.checkCategorySort('significance', 'desc'));
                 me.set('circuits', category.paths);
                 me.set('leftTitle', category.name + ' (' + category.id + ')');
+                me.set('leftTitleUrl', 'https://www.kegg.jp/kegg-bin/show_pathway?' + category.id);
                 me.set('selectedCategory', category);
 
                 me.$.networkViewer.startOver();
