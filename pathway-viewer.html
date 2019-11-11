@@ -156,7 +156,7 @@
                     <div class="elm-btn elm-btn-shdw" title="Export SVG image" on-click="handleExportImage">
                         <i class="fa fa-image"></i>
                     </div>
-                    <div class="elm-btn elm-btn-shdw" title="Center network" on-click="handleCenterNetwork" style="border-left:0">
+                    <div class="elm-btn elm-btn-shdw" title="Center network" on-click="handleCenterNetwork" style="border-left:0" >
                         <i class="fa fa-crosshairs"></i>
                     </div>
                     <div class="elm-btn elm-btn-shdw" title="Width adjust" on-click="handleAdjustWidthNetwork" style="border-left:0">
@@ -179,8 +179,8 @@
                 <div class="label horizontal layout">
                     <div>{{categoryLabel}}:</div>
                     <div class="flex"></div>
-                    <span hidden="{{hideAltered}}" style="color:#000">{{countChanged(categories)}}</span>
-                    <span hidden="{{hideAltered}}" style="color:#666">&nbsp;altered</span>
+                    <span hidden="{{!hideAltered}}" style="color:#000">{{countChanged(categories)}}</span>
+                    <span hidden="{{!hideAltered}}" style="color:#666">&nbsp;altered</span>
                 </div>
                 <div class="horizontal layout">
                     <input class="elm" type="text" placeholder="Filter..." value="{{categorySearchString::input}}">
@@ -201,8 +201,8 @@
                 <div class="label horizontal layout">
                     <label class="elm">{{circuitLabel}}:</label>
                     <div class="flex"></div>
-                    <span hidden="{{hideAltered}}" style="color:#000">{{countChanged(circuits)}}</span>
-                    <span hidden="{{hideAltered}}" style="color:#666">&nbsp;altered</span>
+                    <span hidden="{{!hideAltered}}" style="color:#000">{{countChanged(circuits)}}</span>
+                    <span hidden="{{!hideAltered}}" style="color:#666">&nbsp;altered</span>
                 </div>
                 <div id="circuits" class="box listbox">
                     <template is="dom-repeat" items="{{circuits}}">
@@ -407,6 +407,15 @@
                 this.selectCategory(categories[0]);
             }
         },
+        _categoryDetailsFromID: function (categoryId) {
+            var categories = this.categories;
+            for(var i = 0; i < categories.length; i++){
+                if(categories[i].id==categoryId) {
+                    var x = categories[i];
+                    return x;
+                    }
+                }                
+        },
         loadFile: function(filePath, cb) {
             if (this.pathType == 'url') {
                 this._openRemoteFile(filePath, function(content) {
@@ -474,6 +483,21 @@
             console.log(circuit);
             this.selectCircuit(circuit);
         },
+        _circuitDetailsFromName: function (circuitName) {
+            var categories = this.categories;
+            for(var i = 0; i < categories.length; i++){ 
+                var circuits = this.categories[i].paths;
+                for(var j = 0; j < circuits.length; j++){
+                    if(circuits[j].name==circuitName) {
+                        //var x = circuits[j];
+                        var circuit = circuits[j];  
+                        var category = categories[i];
+                        var selectedCirInCat = [{circuit:circuit}, {category:category}];  
+                        return selectedCirInCat;
+                        }
+                    }
+            }                
+        },
         selectCategory: function(category) {
             var me = this;
             this.loadFiles([
@@ -517,6 +541,13 @@
                         me.$.networkViewer.$.nodeRender.applyDirect(dp, dp);
                     }
                 }
+//Start : added in the new version
+		var vertices = me.$.networkViewer.vertices;
+            	for (var i = 0, l = vertices.length; i < l; i++) {
+		        var vertex = vertices[i];
+		        vertex.renderer.set('labelColor', vertex.attributes.labelColor);
+            	}
+//End : added in the new version
 
                 //Edge attribute processing
                 var ecolmap = {};
@@ -557,7 +588,7 @@
                 this.selectCategory(c);
             }
         },
-        selectCircuit: function(circuit) {
+        selectCircuit: function(circuit) {            
             var me = this;
             if (this.selectedCircuit != null && circuit.id === this.selectedCircuit.id) {
                 this.set('selectedCircuit', null);
@@ -565,8 +596,11 @@
                 this.$.networkViewer.$.edgeRender.removeVisualSet('opacity');
             } else {
                 this.set('selectedCircuit', circuit);
+                var attrId =circuit.id;
+                console.log("circuit");
+                console.log(circuit);
                 // Backward compatibility
-                var attrId = circuit.id.split('__').pop();
+                //var attrId = circuit.id.split('__').pop();
                 // ------------------------------------------
                 this.$.networkViewer.$.nodeRender.applyVisualSet({
                     attribute: attrId,
@@ -639,7 +673,6 @@
             if (Array.isArray(list)) {
                 for (var i = 0; i < list.length; i++) {
                     var item = list[i];
-                    // console.log(pw.haschanged);
                     if (item.haschanged === true) {
                         count++;
                     }
