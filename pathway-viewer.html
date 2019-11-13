@@ -475,12 +475,12 @@
         },
         handleCategoryClick: function(e) {
             var category = e.model.item;
-            console.log(category);
+            //console.log(category);
             this.selectCategory(category);
         },
         handleCircuitClick: function(e) {
             var circuit = e.model.item;
-            console.log(circuit);
+            //console.log(circuit);
             this.selectCircuit(circuit);
         },
         _circuitDetailsFromName: function (circuitName) {
@@ -596,11 +596,9 @@
                 this.$.networkViewer.$.edgeRender.removeVisualSet('opacity');
             } else {
                 this.set('selectedCircuit', circuit);
-                var attrId =circuit.id;
-                console.log("circuit");
-                console.log(circuit);
+                //var attrId =circuit.id; // dif between V1 and V2
                 // Backward compatibility
-                //var attrId = circuit.id.split('__').pop();
+                var attrId = circuit.id.split('__').pop();
                 // ------------------------------------------
                 this.$.networkViewer.$.nodeRender.applyVisualSet({
                     attribute: attrId,
