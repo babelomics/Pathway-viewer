@@ -179,8 +179,8 @@
                 <div class="label horizontal layout">
                     <div>{{categoryLabel}}:</div>
                     <div class="flex"></div>
-                    <span hidden="{{!hideAltered}}" style="color:#000">{{countChanged(categories)}}</span>
-                    <span hidden="{{!hideAltered}}" style="color:#666">&nbsp;altered</span>
+                    <span hidden="{{hideAltered}}" style="color:#000">{{countChanged(categories)}}</span>
+                    <span hidden="{{hideAltered}}" style="color:#666">&nbsp;altered</span>
                 </div>
                 <div class="horizontal layout">
                     <input class="elm" type="text" placeholder="Filter..." value="{{categorySearchString::input}}">
@@ -201,8 +201,8 @@
                 <div class="label horizontal layout">
                     <label class="elm">{{circuitLabel}}:</label>
                     <div class="flex"></div>
-                    <span hidden="{{!hideAltered}}" style="color:#000">{{countChanged(circuits)}}</span>
-                    <span hidden="{{!hideAltered}}" style="color:#666">&nbsp;altered</span>
+                    <span hidden="{{hideAltered}}" style="color:#000">{{countChanged(circuits)}}</span>
+                    <span hidden="{{hideAltered}}" style="color:#666">&nbsp;altered</span>
                 </div>
                 <div id="circuits" class="box listbox">
                     <template is="dom-repeat" items="{{circuits}}">
@@ -321,15 +321,22 @@
         },
         handleVertexSearch: function(e) {
             //e.which == 13
+            if(e.which!=13)
+                var valueToSearch = e.currentTarget.value+e.key;
+            else
+                var valueToSearch = e.currentTarget.value;
             if(true)
             {
-                var nv =document.getElementsByTagName("network-viewer")[0];
+                
+                //var nv =document.getElementsByTagName("network-viewer")[1];
+                var nv = this.$.networkViewer;
                 str = 'all attributes';
                     var selected = [];
                     for (var i = 0; i < nv.graph.vertices.length; i++) {
                         var vertex = nv.graph.vertices[i];
-                        for (var att in vertex.attributes) {                            
-                            if (vertex.attributes[att].toString().indexOf(e.currentTarget.value) != -1) {
+                        var vertixToCheck = ['genesList', 'label'];
+                        for (var att of vertixToCheck) {                            
+                            if (vertex.attributes[att].toString().toUpperCase().indexOf(valueToSearch.toUpperCase()) != -1) {
                                 selected.push(vertex);
                                 break;
                             }
@@ -337,7 +344,7 @@
                     }
                     nv.set('selectedVertices', selected);
                 if (nv.selectedVertices.length == 0) {
-                    elm.utils.msg('Search results', 'Your search using ' + str + ' "' + e.explicitOriginalTarget.value + '" using did not match any node.');
+                    elm.utils.msg('Search results', 'Your search using "' + valueToSearch + '" did not match any node.');
                 } else {
                     elm.utils.msg('Search results', nv.selectedVertices.length + ' nodes found using ' + str + '. The found nodes has been selected.');
                 }
@@ -563,7 +570,7 @@
                 var edgeDisplayProperties = ['labelSize', 'opacity', 'shaft', 'shape', 'bidirectional', 'color', 'size'];
                 for (var i = 0; i < edgeDisplayProperties.length; i++) {
                     var dp = edgeDisplayProperties[i];
-                    if (me.edgeAttributeMapping[dp] != null && ecolmap[dp] != null) {
+                    if (me.edgeAttributeMapping[dp] != null && ecolmap[me.edgeAttributeMapping[dp]] != null) {
                         me.$.networkViewer.$.edgeRender.applyDirect(me.edgeAttributeMapping[dp], dp);
                     } else if (ecolmap[dp] != null) {
                         me.$.networkViewer.$.edgeRender.applyDirect(dp, dp);
