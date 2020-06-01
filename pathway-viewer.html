@@ -165,13 +165,16 @@
                     <div class="elm-btn elm-btn-shdw" title="Height adjust" on-click="handleAdjustHeightNetwork" style="border-left:0">
                         <i class="fa fa-arrows-v"></i>
                     </div>
+                    <div class="elm-btn elm-btn-shdw" title="Save layout" on-click="handleSaveLayout" style="border-left:0" >
+                        <i class="fa fa-save"></i>
+                    </div>
 
                 </div>
                 <!-- <network-viewer id="networkViewer" disable-context-menu></network-viewer> -->
                 <!-- <network-viewer lite></network-viewer> -->
                 <!-- <network-viewer hide-node-render hide-edge-render></network-viewer> -->
                 <!-- <network-viewer lite hide-node-render hide-edge-render></network-viewer> -->
-                <network-viewer id="networkViewer" hide-bar hide-tool-bar hide-edition-bar hide-status-bar hide-node-render hide-edge-render hide-external disable-context-menu></network-viewer>
+                <network-viewer id="networkViewer"  hide-tool-bar hide-edition-bar hide-status-bar hide-node-render hide-edge-render hide-external disable-context-menu s-lite></network-viewer>
             </div>
             <div id="right">
                 <content select=".right-tissue-label"></content>
@@ -350,6 +353,39 @@
                 }
             }
         },
+        handleSaveLayout: function() {
+            //save current layout
+            var nattFilePath=this.path +'/'+this.selectedCategory.id+'.natt'
+            this.exportToNodeAttrFile(nattFilePath);
+
+        },
+        exportToNodeAttrFile: function(file) {
+            var content = this.$.networkViewer.exportVertexAttributes();
+            var blob = new Blob([content], {
+                type: "text/plain;charset=utf-8"
+            });
+            var fileId = this.sessionFileNameMap[file]._id;
+            CbaManager.files.saveAttFile({
+                id: fileId,
+                request: {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "text/plain;charset=utf-8"
+                    },
+                    body: blob,
+                    success: function(response) {
+                        if (response.response[0].error == null) {
+                            console.log("new layout is done");
+                        } else {
+                            console.log(response.response[0].error);
+                        }
+                    },
+                    error: function() {
+                        console.log('Server error, try again later.');
+                    }
+                }
+            });
+        },
         handleExportImage: function() {
             var text = this.$.networkViewer.exportSVG();
             var blob = new Blob([text], {
@@ -482,7 +518,7 @@
         },
         handleCategoryClick: function(e) {
             var category = e.model.item;
-            //console.log(category);
+            console.log(category);
             this.selectCategory(category);
         },
         handleCircuitClick: function(e) {
