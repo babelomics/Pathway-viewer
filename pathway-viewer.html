@@ -2,6 +2,8 @@
 <link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="../iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../network-viewer/network-viewer.html">
+<link rel="import" href="../paper-toast/paper-toast.html">
+
 <script src="../async/dist/async.min.js"></script>
 
 <script src="images/hipathia_legend.js"></script>
@@ -12,7 +14,7 @@
 
 <dom-module id="pathway-viewer">
     <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
-         :host {
+       :host {
             box-sizing: border-box;
             position: relative;
             font-size: 13px;
@@ -30,7 +32,7 @@
             @apply(--layout-horizontal);
         }
 
-         :host[show-hipathia-legend]>#main {
+        :host[show-hipathia-legend]>#main {
             height: calc(100% - 100px) !important;
         }
 
@@ -69,18 +71,18 @@
 
         network-viewer,
         .box,
-         :host::content .right-box {
+        :host::content .right-box {
             border: 1px solid var(--divider-color);
             box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
             background-color: var(--text-primary-color);
         }
 
         .label:not(:first-child),
-         :host::content.right-label:not(:first-child) {
+        :host::content.right-label:not(:first-child) {
             padding-top: 10px;
         }
 
-         :host::content.right-label,
+        :host::content.right-label,
         .label {
             @apply(--layout-horizontal);
             @apply(--layout-center);
@@ -144,6 +146,9 @@
         .button:hover {
             background-color: var(--light-button-color) !important;
         }
+        #toast1{
+            --paper-toast-background-color : var(--dark-button-color);
+        }
     </style>
     <template>
         <div id="main">
@@ -152,29 +157,8 @@
                     <div class="label" style="font-size:20px;">{{leftTitle}} <span style="color: black"> > </span>  <a target="_blank" href="{{leftTitleUrl}}"> <i class="fa fa-database" aria-hidden="true"></i></a></div>
                     <div class="flex"></div>
                     <content select=".left-label"></content>
-                    <input on-keypress="handleVertexSearch" id="vertexSearchField" class="elm" type="text" placeholder="Search" style="width: 100px; margin-right:3px;">
-                    <div class="elm-btn elm-btn-shdw" title="Export SVG image" on-click="handleExportImage">
-                        <i class="fa fa-image"></i>
-                    </div>
-                    <div class="elm-btn elm-btn-shdw" title="Center network" on-click="handleCenterNetwork" style="border-left:0" >
-                        <i class="fa fa-crosshairs"></i>
-                    </div>
-                    <div class="elm-btn elm-btn-shdw" title="Width adjust" on-click="handleAdjustWidthNetwork" style="border-left:0">
-                        <i class="fa fa-arrows-h"></i>
-                    </div>
-                    <div class="elm-btn elm-btn-shdw" title="Height adjust" on-click="handleAdjustHeightNetwork" style="border-left:0">
-                        <i class="fa fa-arrows-v"></i>
-                    </div>
-                    <div class="elm-btn elm-btn-shdw" title="Save layout" on-click="handleSaveLayout" style="border-left:0" >
-                        <i class="fa fa-save"></i>
-                    </div>
-
                 </div>
-                <!-- <network-viewer id="networkViewer" disable-context-menu></network-viewer> -->
-                <!-- <network-viewer lite></network-viewer> -->
-                <!-- <network-viewer hide-node-render hide-edge-render></network-viewer> -->
-                <!-- <network-viewer lite hide-node-render hide-edge-render></network-viewer> -->
-                <network-viewer id="networkViewer"  hide-tool-bar hide-edition-bar hide-status-bar hide-node-render hide-edge-render hide-external disable-context-menu s-lite></network-viewer>
+                <network-viewer id="networkViewer" hide-bar  hide-tool-bar hide-edition-bar hide-status-bar hide-node-render hide-edge-render hide-external disable-context-menu></network-viewer>
             </div>
             <div id="right">
                 <content select=".right-tissue-label"></content>
@@ -225,6 +209,7 @@
         <div hidden$="{{!showHipathiaLegend}}" style="text-align:left;">
             <img src$="{{_hipathiaLegendImage}}"></img>
         </div>
+        <paper-toast  id="toast1" text="{{message}}"></paper-toast>
     </template>
 </dom-module>
 <script>
@@ -330,22 +315,21 @@
                 var valueToSearch = e.currentTarget.value;
             if(true)
             {
-                
                 //var nv =document.getElementsByTagName("network-viewer")[1];
                 var nv = this.$.networkViewer;
                 str = 'all attributes';
-                    var selected = [];
-                    for (var i = 0; i < nv.graph.vertices.length; i++) {
-                        var vertex = nv.graph.vertices[i];
-                        var vertixToCheck = ['genesList', 'label'];
-                        for (var att of vertixToCheck) {                            
-                            if (vertex.attributes[att].toString().toUpperCase().indexOf(valueToSearch.toUpperCase()) != -1) {
-                                selected.push(vertex);
-                                break;
-                            }
+                var selected = [];
+                for (var i = 0; i < nv.graph.vertices.length; i++) {
+                    var vertex = nv.graph.vertices[i];
+                    var vertixToCheck = ['genesList', 'label'];
+                    for (var att of vertixToCheck) {                            
+                        if (vertex.attributes[att].toString().toUpperCase().indexOf(valueToSearch.toUpperCase()) != -1) {
+                            selected.push(vertex);
+                            break;
                         }
                     }
-                    nv.set('selectedVertices', selected);
+                }
+                nv.set('selectedVertices', selected);
                 if (nv.selectedVertices.length == 0) {
                     elm.utils.msg('Search results', 'Your search using "' + valueToSearch + '" did not match any node.');
                 } else {
@@ -360,6 +344,7 @@
 
         },
         exportToNodeAttrFile: function(file) {
+            var me = this;
             var content = this.$.networkViewer.exportVertexAttributes();
             var blob = new Blob([content], {
                 type: "text/plain;charset=utf-8"
@@ -375,16 +360,17 @@
                     body: blob,
                     success: function(response) {
                         if (response.response[0].error == null) {
-                            console.log("new layout is done");
+                            me.message = "New layout is successfully saved";                           
                         } else {
-                            console.log(response.response[0].error);
+                            me.message = response.response[0].error;
                         }
                     },
                     error: function() {
-                        console.log('Server error, try again later.');
+                        me.message = 'Server error, try again later.';
                     }
                 }
             });
+            this.$.toast1.open();
         },
         handleExportImage: function() {
             var text = this.$.networkViewer.exportSVG();
@@ -456,8 +442,8 @@
                 if(categories[i].id==categoryId) {
                     var x = categories[i];
                     return x;
-                    }
-                }                
+                }
+            }                
         },
         loadFile: function(filePath, cb) {
             if (this.pathType == 'url') {
@@ -537,8 +523,8 @@
                         var category = categories[i];
                         var selectedCirInCat = [{circuit:circuit}, {category:category}];  
                         return selectedCirInCat;
-                        }
                     }
+                }
             }                
         },
         selectCategory: function(category) {
@@ -547,21 +533,21 @@
                 me.path + '/' + category.id + '.sif',
                 me.path + '/' + category.id + '.natt',
                 me.path + '/' + category.id + '.eatt'
-            ], function(results) {
-                var sif = results[0];
-                var natt = results[1];
-                var eatt = results[2];
-                category.paths.sort(me.checkCategorySort('significance', 'desc'));
-                me.set('circuits', category.paths);
-                me.set('leftTitle', category.name + ' (' + category.id + ')');
-                me.set('leftTitleUrl', 'https://www.kegg.jp/kegg-bin/show_pathway?' + category.id);
-                me.set('selectedCategory', category);
+                ], function(results) {
+                    var sif = results[0];
+                    var natt = results[1];
+                    var eatt = results[2];
+                    category.paths.sort(me.checkCategorySort('significance', 'desc'));
+                    me.set('circuits', category.paths);
+                    me.set('leftTitle', category.name + ' (' + category.id + ')');
+                    me.set('leftTitleUrl', 'https://www.kegg.jp/kegg-bin/show_pathway?' + category.id);
+                    me.set('selectedCategory', category);
 
-                me.$.networkViewer.startOver();
-                me.$.networkViewer.backgroundColor = me.backgroundColor;
-                me.$.networkViewer.loadSif(sif);
-                me.$.networkViewer.loadNodeAttributes(natt, true);
-                me.$.networkViewer.loadEdgeAttributes(eatt, true);
+                    me.$.networkViewer.startOver();
+                    me.$.networkViewer.backgroundColor = me.backgroundColor;
+                    me.$.networkViewer.loadSif(sif);
+                    me.$.networkViewer.loadNodeAttributes(natt, true);
+                    me.$.networkViewer.loadEdgeAttributes(eatt, true);
 
                 //Node attribute processing
                 var ncolmap = {};
@@ -584,13 +570,13 @@
                         me.$.networkViewer.$.nodeRender.applyDirect(dp, dp);
                     }
                 }
-//Start : added in the new version
-		var vertices = me.$.networkViewer.vertices;
-            	for (var i = 0, l = vertices.length; i < l; i++) {
-		        var vertex = vertices[i];
-		        vertex.renderer.set('labelColor', vertex.attributes.labelColor);
-            	}
-//End : added in the new version
+                //Start : added in the new version
+                var vertices = me.$.networkViewer.vertices;
+                for (var i = 0, l = vertices.length; i < l; i++) {
+                  var vertex = vertices[i];
+                  vertex.renderer.set('labelColor', vertex.attributes.labelColor);
+                }
+                //End : added in the new version
 
                 //Edge attribute processing
                 var ecolmap = {};
