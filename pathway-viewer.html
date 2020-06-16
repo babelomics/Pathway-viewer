@@ -96,7 +96,7 @@
             cursor: pointer;
             padding: 1px 4px;
             border: 1px solid transparent;
-            color: #555;
+            color: #000;
         }
 
         .listbox>div:hover {
@@ -345,6 +345,7 @@
         },
         exportToNodeAttrFile: function(file) {
             var me = this;
+            me.message = 'Server error, try again later.';
             var content = this.$.networkViewer.exportVertexAttributes();
             var blob = new Blob([content], {
                 type: "text/plain;charset=utf-8"
