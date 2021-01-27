@@ -505,7 +505,7 @@
         },
         handleCategoryClick: function(e) {
             var category = e.model.item;
-            console.log(category);
+            //console.log(category);
             this.selectCategory(category);
         },
         handleCircuitClick: function(e) {
@@ -534,21 +534,21 @@
                 me.path + '/' + category.id + '.sif',
                 me.path + '/' + category.id + '.natt',
                 me.path + '/' + category.id + '.eatt'
-                ], function(results) {
-                    var sif = results[0];
-                    var natt = results[1];
-                    var eatt = results[2];
-                    category.paths.sort(me.checkCategorySort('significance', 'desc'));
-                    me.set('circuits', category.paths);
-                    me.set('leftTitle', category.name + ' (' + category.id + ')');
-                    me.set('leftTitleUrl', 'https://www.kegg.jp/kegg-bin/show_pathway?' + category.id);
-                    me.set('selectedCategory', category);
+            ], function(results) {
+                var sif = results[0];
+                var natt = results[1];
+                var eatt = results[2];
+                category.paths.sort(me.checkCategorySort('significance', 'desc'));
+                me.set('circuits', category.paths);
+                me.set('leftTitle', category.name + ' (' + category.id + ')');
+                me.set('leftTitleUrl', 'https://www.kegg.jp/kegg-bin/show_pathway?' + category.id);
+                me.set('selectedCategory', category);
 
-                    me.$.networkViewer.startOver();
-                    me.$.networkViewer.backgroundColor = me.backgroundColor;
-                    me.$.networkViewer.loadSif(sif);
-                    me.$.networkViewer.loadNodeAttributes(natt, true);
-                    me.$.networkViewer.loadEdgeAttributes(eatt, true);
+                me.$.networkViewer.startOver();
+                me.$.networkViewer.backgroundColor = me.backgroundColor;
+                me.$.networkViewer.loadSif(sif);
+                me.$.networkViewer.loadNodeAttributes(natt, true);
+                me.$.networkViewer.loadEdgeAttributes(eatt, true);
 
                 //Node attribute processing
                 var ncolmap = {};
@@ -565,7 +565,8 @@
                 var nodeDisplayProperties = ['labelSize', 'opacity', 'shape', 'color', 'strokeColor', 'size', 'strokeSize'];
                 for (var i = 0; i < nodeDisplayProperties.length; i++) {
                     var dp = nodeDisplayProperties[i];
-                    if (me.nodeAttributeMapping[dp] != null && ncolmap[dp] != null) {
+                    //if (me.nodeAttributeMapping[dp] != null && ncolmap[dp] != null) {
+                    if (me.nodeAttributeMapping[dp] != null ) {
                         me.$.networkViewer.$.nodeRender.applyDirect(me.nodeAttributeMapping[dp], dp);
                     } else if (ncolmap[dp] != null) {
                         me.$.networkViewer.$.nodeRender.applyDirect(dp, dp);
